@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DASHBOARD // TERMINAL</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1 style="margin-top: 15px;">DASHBOARD</h1>
+    
+    <div class="decor-lines">
+        <div class="line-long"></div>
+        <div class="scan-text">WHERE COMMITS BECOME COMBACT</div>
+        <div class="line-long" style="width: 70%; opacity: 0.5;"></div>
+    </div>
+
+    <div class="container">
+        <p style="color: #fff; font-size: 1.1rem; margin-bottom: 30px; letter-spacing: 3px; font-family: 'Syncopate', sans-serif;">
+            SUBMIT REPO URL
+        </p>
+        
+        <input type="text" id="repoUrl" placeholder="https://github.com/user/repo">
+        
+        <button class="btn" onclick="submit()">SUBMIT SOLUTION</button>
+        
+        <div id="msg" style="margin-top: 20px; font-size: 1rem; font-weight: bold;"></div>
+        
+        <a href="leaderboard.html" class="lb-link">
+            [ VIEW_LEADERBOARD ]
+        </a>
+    </div>
+
+    <script>
+        async function submit() {
+            const repoUrl = document.getElementById('repoUrl').value;
+            const msg = document.getElementById('msg');
+            msg.innerText = ">> PROCESSING...";
+            msg.style.color = "#ff8c00";
+
+            try {
+                const res = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ repoUrl, level: "1" })
+                });
+                const data = await res.json();
+                msg.innerText = ">> STATUS: " + data.status.toUpperCase();
+                msg.style.color = data.status === 'passed' ? '#00ff41' : '#ff0000';
+            } catch (err) {
+                msg.innerText = ">> ERROR: UPLINK FAILED";
+                msg.style.color = "#ff0000";
+            }
+        }
+    </script>
+</body>
+</html>
