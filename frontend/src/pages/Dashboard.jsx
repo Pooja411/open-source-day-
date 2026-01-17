@@ -247,7 +247,7 @@ function Dashboard() {
                 </div>
 
                 <a
-                  href={levelLinks[selectedLevel]}
+                  href={levelLinks ? levelLinks[selectedLevel.toString()] : "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{

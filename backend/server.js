@@ -81,15 +81,23 @@ app.use(express.urlencoded({ extended: true }));
       console.log("GitHub token loaded:", !!process.env.GITHUB_TOKEN);
 // CORS Configuration for development (React runs on different port)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', CONFIG.FRONTEND_URL);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
+  const allowedOrigin = process.env.FRONTEND_URL;
+
+  if (allowedOrigin) {
+    res.header("Access-Control-Allow-Origin", allowedOrigin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
+
   next();
 });
+
 
 // Serve static files from React build in production
 // if (CONFIG.NODE_ENV === 'production') {
