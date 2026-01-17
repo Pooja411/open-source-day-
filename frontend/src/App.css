@@ -156,7 +156,7 @@ h1 {
     border: 2px solid var(--neon-orange);
     padding: 2.25rem 1.8rem;
     width: 90%;
-    max-width: 495px;
+    max-width: 750px;
     box-shadow: 9px 9px 0px var(--neon-orange);
     position: relative;
     text-align: center;

@@ -44,6 +44,16 @@ const CONFIG = {
   // Scoring System
   POINTS_PER_LEVEL: 100, // Level 1 = 100pts, Level 2 = 200pts, etc.
   
+  // Level Configuration
+  LEVEL_LINKS: {
+    0: 'https://github.com/OSD-2k26/level-0',
+    1: 'https://github.com/OSD-2k26/level-1',
+    2: 'https://github.com/OSD-2k26/level-2',
+    3: 'https://github.com/OSD-2k26/level-3',
+    4: 'https://github.com/OSD-2k26/level-4',
+    5: 'https://github.com/OSD-2k26/level-5'
+  },
+  
   // Database
   MONGO_URI: process.env.MONGO_URI,
   
@@ -124,6 +134,8 @@ function buildGithubApiUrls(owner, repo, runId = null) {
 function calculateScore(level, passed) {
   if (!passed) return 0;
   const levelNum = parseInt(level) || 1;
+  // Level 0 is demo level, gives 100 points
+  if (levelNum === 0) return 100;
   return levelNum * CONFIG.POINTS_PER_LEVEL;
 }
 
@@ -556,6 +568,38 @@ app.get('/api/auth/status', (req, res) => {
     });
   } else {
     res.json({ authenticated: false });
+  }
+});
+
+// Get user's completed levels and level links
+app.get('/api/user/levels', async (req, res) => {
+  try {
+    // For testing: create a mock user if not authenticated
+    let userId = req.session.userId;
+    
+    if (!userId) {
+      console.log('⚠️ No session found, using test user for development');
+      const testUser = await getOrCreateTestUser();
+      userId = testUser._id;
+      req.session.userId = userId;
+    }
+
+    // Get all passed submissions for this user
+    const passedSubmissions = await Submission.find({
+      userId: userId,
+      status: 'passed'
+    }).select('level');
+
+    // Extract completed level numbers
+    const completedLevels = passedSubmissions.map(sub => parseInt(sub.level)).sort((a, b) => a - b);
+
+    res.json({
+      levelLinks: CONFIG.LEVEL_LINKS,
+      completedLevels: completedLevels
+    });
+  } catch (err) {
+    console.error('Get levels error:', err);
+    res.status(500).json({ error: 'Could not fetch levels' });
   }
 });
 
