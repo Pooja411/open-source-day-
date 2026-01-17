@@ -153,7 +153,7 @@ function Leaderboard() {
           </table>
         </div>
 
-        <Link to="/dashboard" className="lb-link">
+        <Link to="/" className="lb-link">
           &lt; BACK_TO_TERMINAL &gt;
         </Link>
       </div>
