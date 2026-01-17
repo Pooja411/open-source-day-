@@ -35,9 +35,11 @@ function Leaderboard() {
 
   const loadLeaderboard = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/leaderboard", {
-        credentials: "include",
-      });
+     const res = await fetch(
+  `${import.meta.env.VITE_BACKEND_URL}/api/leaderboard`,
+  { credentials: "include" }
+);
+
       const data = await res.json();
       setLeaderboardData(data);
       setTotalUsers(data.length);

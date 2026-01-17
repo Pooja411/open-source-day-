@@ -13,9 +13,14 @@ function Dashboard() {
   useEffect(() => {
     const fetchLevels = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/user/levels", {
-          credentials: "include",
-        });
+        // const res = await fetch("http://localhost:3000/api/user/levels", {
+        //   credentials: "include",
+        // });
+        const res = await fetch(
+  `${import.meta.env.VITE_BACKEND_URL}/api/user/levels`,
+  { credentials: "include" }
+);
+
         const data = await res.json();
         setLevelLinks(data.levelLinks);
         setLoading(false);

@@ -1,13 +1,19 @@
 // 1. Load Environment Variables with absolute path detection
-const path = require('path');
-const dotenv = require('dotenv');
-const envPath = path.join(__dirname, '.env');
-dotenv.config({ path: envPath });
+// const path = require('path');
+// const dotenv = require('dotenv');
+// const envPath = path.join(__dirname, '.env');
+// dotenv.config({ path: envPath });
 
-// 2. Fail-safe check: Stop the server if secrets are missing
+// // 2. Fail-safe check: Stop the server if secrets are missing
+// if (!process.env.SESSION_SECRET || !process.env.GITHUB_CLIENT_ID) {
+//     console.error("❌ ERROR: Missing environment variables in backend/.env");
+//     console.error("Path searched:", envPath);
+//     process.exit(1);
+// }
+require('dotenv').config();
+
 if (!process.env.SESSION_SECRET || !process.env.GITHUB_CLIENT_ID) {
-    console.error("❌ ERROR: Missing environment variables in backend/.env");
-    console.error("Path searched:", envPath);
+    console.error("❌ ERROR: Missing environment variables");
     process.exit(1);
 }
 
@@ -46,12 +52,12 @@ const CONFIG = {
   
   // Level Configuration
   LEVEL_LINKS: {
-    0: 'https://github.com/OSD-2k26/level-0',
-    1: 'https://github.com/OSD-2k26/level-1',
-    2: 'https://github.com/OSD-2k26/level-2',
-    3: 'https://github.com/OSD-2k26/level-3',
-    4: 'https://github.com/OSD-2k26/level-4',
-    5: 'https://github.com/OSD-2k26/level-5'
+    0: 'https://classroom.github.com/a/-mDK6v1a',
+    1: 'https://classroom.github.com/a/gF1BxiUa',
+    2: 'https://classroom.github.com/a/qtiNJt92',
+    3: 'https://classroom.github.com/a/IkeIkRUT',
+    4: 'https://classroom.github.com/a/v-vPXsGd',
+    5: 'https://classroom.github.com/a/TA8NqnQY'
   },
   
   // Database
@@ -72,7 +78,7 @@ const CONFIG = {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+      console.log("GitHub token loaded:", !!process.env.GITHUB_TOKEN);
 // CORS Configuration for development (React runs on different port)
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', CONFIG.FRONTEND_URL);
@@ -86,9 +92,9 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from React build in production
-if (CONFIG.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
-}
+// if (CONFIG.NODE_ENV === 'production') {
+//   app.use(express.static(path.join(__dirname, '../frontend/dist')));
+// }
 
 // Session Configuration
 app.use(session({
@@ -254,6 +260,8 @@ app.post('/api/submit', async (req, res) => {
     req.session.userId = userId;
   }
   
+ 
+
   console.log('📥 Submission received:', { repoUrl: req.body.repoUrl, userId });
   
   try {
@@ -267,7 +275,12 @@ app.post('/api/submit', async (req, res) => {
         status: 'failed'
       });
     }
-
+     if (repoUrl.includes('classroom.github.com')) {
+  return res.status(400).json({
+    status: 'failed',
+    message: 'Please submit your forked GitHub repository URL, not the Classroom invite link.'
+  });
+}
     // First evaluate the submission to check its status
     console.log('🔍 Evaluating submission...');
     const evaluationResult = await evaluateSubmission(repoUrl, level);
@@ -375,12 +388,15 @@ async function evaluateSubmission(repoUrl, level) {
       workflowResponse = await axios.get(apiUrls.workflows, {
         headers: {
           'User-Agent': CONFIG.GITHUB_USER_AGENT,
-          'Accept': CONFIG.GITHUB_API_VERSION
+          'Accept': CONFIG.GITHUB_API_VERSION,
+          'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
         },
         params: {
-          per_page: 1 // Only get the latest run
+          per_page: 5 // Only get the latest run
         }
       });
+
+
     } catch (axiosError) {
       // Handle GitHub API errors
       if (axiosError.response) {
@@ -430,8 +446,25 @@ async function evaluateSubmission(repoUrl, level) {
         }
       };
     }
+const completedRun = workflowRuns.find(
+  run => run.status === 'completed' && run.conclusion === 'success'
+);
 
-    const latestRun = workflowRuns[0];
+if (!completedRun) {
+  return {
+    status: 'failed',
+    score: 0,
+    message: 'No successful GitHub Actions run found yet',
+    testResults: {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      details: 'Wait for Actions to complete successfully'
+    }
+  };
+}
+
+    const latestRun = completedRun;
     console.log(`📊 Workflow Status: ${latestRun.status}, Conclusion: ${latestRun.conclusion}`);
 
     // Fetch job-level details for scoring breakdown
@@ -444,7 +477,8 @@ async function evaluateSubmission(repoUrl, level) {
       const jobsResponse = await axios.get(jobsApiUrl, {
         headers: {
           'User-Agent': CONFIG.GITHUB_USER_AGENT,
-          'Accept': CONFIG.GITHUB_API_VERSION
+          'Accept': CONFIG.GITHUB_API_VERSION,
+          'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`
         }
       });
 
@@ -617,12 +651,12 @@ app.post('/api/auth/logout', (req, res) => {
 // PRODUCTION - Serve React Frontend
 // ============================================================================
 
-// Serve React app for all other routes (production)
-if (CONFIG.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
-  });
-}
+// // Serve React app for all other routes (production)
+// if (CONFIG.NODE_ENV === 'production') {
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+//   });
+// }
 
 // ============================================================================
 // START SERVER
