@@ -276,7 +276,7 @@ app.post('/api/submit', async (req, res) => {
     const { repoUrl, level } = req.body;
     
     // Validate GitHub URL
-    if (!repoUrl || !repoUrl.includes('github.com')) {
+    if (!repoUrl || !repoUrl.includes('github.com') || repoUrl.includes('/tree') || !repoUrl.includes('OSD-2k26')) {
       console.log('❌ Invalid URL');
       return res.status(400).json({ 
         error: 'Invalid repository URL. Must be a valid GitHub URL.',
@@ -315,14 +315,14 @@ app.post('/api/submit', async (req, res) => {
     }
 
     // Extract GitHub username from repo URL and update user
-    const githubUsername = extractGithubUsername(repoUrl);
-    if (githubUsername !== 'unknown') {
-      console.log('👤 Extracted GitHub username:', githubUsername);
-      await User.findByIdAndUpdate(userId, {
-        username: githubUsername,
-        lastActive: new Date()
-      });
-    }
+    // const githubUsername = extractGithubUsername(repoUrl);
+    // if (githubUsername !== 'unknown') {
+    //   console.log('👤 Extracted GitHub username:', githubUsername);
+    //   await User.findByIdAndUpdate(userId, {
+    //     username: githubUsername,
+    //     lastActive: new Date()
+    //   });
+    // }
 
     // Use the already-evaluated result
     console.log('📊 Evaluation result:', evaluationResult.status, 'Score:', evaluationResult.score);
@@ -547,30 +547,63 @@ if (!completedRun) {
 // Leaderboard API - Get top users by score
 app.get('/api/leaderboard', async (req, res) => {
   try {
-    const lb = await Submission.aggregate([
+    const leaderboard = await Submission.aggregate([
       { $match: { status: "passed" } },
-      { $group: { 
-          _id: "$userId", 
-          totalScore: { $sum: "$score" }, 
-          lastSub: { $max: "$submittedAt" },
-          submissionCount: { $sum: 1 }
-      } },
-      { $lookup: { 
-          from: "users", 
-          localField: "_id", 
-          foreignField: "_id", 
-          as: "user" 
-      } },
+
+      {
+        $group: {
+          _id: {
+            userId: "$userId",
+            level: "$level"
+          },
+          score: { $max: "$score" },
+          submittedAt: { $max: "$submittedAt" }
+        }
+      },
+
+      {
+        $group: {
+          _id: "$_id.userId",
+          totalScore: { $sum: "$score" },
+          submissionCount: { $sum: 1 },
+          lastSub: { $max: "$submittedAt" }
+        }
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+
       { $unwind: "$user" },
+
+      {
+        $project: {
+          _id: 0,
+          userId: "$_id",
+          username: "$user.username",
+          avatarUrl: "$user.avatarUrl",
+          totalScore: 1,
+          submissionCount: 1,
+          lastSub: 1
+        }
+      },
+
       { $sort: { totalScore: -1, lastSub: 1 } },
-      { $limit: 100 } // Limit to top 100 for performance
+      { $limit: 100 }
     ]);
-    res.json(lb);
+
+    res.json(leaderboard);
   } catch (err) {
-    console.error('Leaderboard error:', err);
+    console.error("Leaderboard error:", err);
     res.status(500).json({ error: "Could not fetch leaderboard" });
   }
 });
+
 
 // User Profile API - Get user details and submission history
 app.get('/api/user/profile', requireAuth, async (req, res) => {
