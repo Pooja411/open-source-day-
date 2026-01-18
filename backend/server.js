@@ -52,12 +52,12 @@ const CONFIG = {
   
   // Level Configuration
   LEVEL_LINKS: {
-    0: 'https://classroom.github.com/a/-mDK6v1a',
-    1: 'https://classroom.github.com/a/gF1BxiUa',
-    2: 'https://classroom.github.com/a/qtiNJt92',
-    3: 'https://classroom.github.com/a/IkeIkRUT',
-    4: 'https://classroom.github.com/a/v-vPXsGd',
-    5: 'https://classroom.github.com/a/TA8NqnQY'
+    0: 'https://classroom.github.com/a/oei-jHmC',
+    1: 'https://classroom.github.com/a/9Ti28mea',
+    2: 'https://classroom.github.com/a/L6ZWIh_t',
+    3: 'https://classroom.github.com/a/2dL-61Wi',
+    4: 'https://classroom.github.com/a/oyYhodtk',
+    5: 'https://classroom.github.com/a/sKfVinhy'
   },
   
   // Database
