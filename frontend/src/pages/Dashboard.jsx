@@ -403,7 +403,7 @@ function Dashboard() {
               )}
             </div>
 
-            <Link
+            {/* <Link
               to="/leaderboard"
               className="lb-link"
               style={{
@@ -415,7 +415,7 @@ function Dashboard() {
               }}
             >
               [ VIEW_LEADERBOARD ]
-            </Link>
+            </Link> */}
           </>
         )}
       </div>
